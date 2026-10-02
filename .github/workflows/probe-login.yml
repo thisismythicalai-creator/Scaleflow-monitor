@@ -1,0 +1,29 @@
+name: ScaleFlow login probe
+on:
+  schedule:
+    - cron: '15 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node probe-login.mjs
+        env:
+          PROBE_EMAIL: ${{ secrets.PROBE_EMAIL }}
+          PROBE_PASSWORD: ${{ secrets.PROBE_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: login-evidence
+          path: |
+            login-report.json
+            *.png
